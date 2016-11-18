@@ -1,9 +1,7 @@
 clear all, close all, clc;
-
-
 %%
-load face.mat
-
+load('/Users/Gustaf/Dropbox KTH/Dropbox/KTH/Imperial College London/kurser/autumn/pattern recognition/cw/PCA and SVM for face recognition MATLAB/lib/face.mat')
+%%
 [ training_data, labeled_training, test_data, labeled_test ] = partition_data(X, l);
 x_bar = compute_avg_face_vector(training_data);
 [ A, S ] = compute_covariance_matrix(training_data, x_bar);
