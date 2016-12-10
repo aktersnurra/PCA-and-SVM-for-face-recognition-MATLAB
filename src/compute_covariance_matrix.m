@@ -10,7 +10,6 @@ function [ A, S ] = compute_covariance_matrix( training_data, x_bar )
        A = [A phi];
     end
     
-    %S = cov(A);
     S = (1/N) * A * A';
 end
 

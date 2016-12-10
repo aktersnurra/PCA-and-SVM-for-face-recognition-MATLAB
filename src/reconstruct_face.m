@@ -1,9 +1,8 @@
-function [ x_tilde ] = reconstruct_face( x_bar, w, eigenvectors )
+function [ x_tilde ] = reconstruct_face( x_bar, w, eigenvectors, face )
 %UNTITLED12 Summary of this function goes here
 %   Detailed explanation goes here
     start = 1;
     M = length(w(:, 1));
-    face = 1;
     sum_eig_vec = [];
     for i = start:M
        u = eigenvectors(:, i);

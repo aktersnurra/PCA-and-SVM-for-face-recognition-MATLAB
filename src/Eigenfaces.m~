@@ -1,8 +1,9 @@
 clear all, close all, clc;
 %%
 load('/Users/Gustaf/Dropbox KTH/Dropbox/KTH/Imperial College London/kurser/autumn/pattern recognition/cw/PCA and SVM for face recognition MATLAB/lib/face.mat')
-
 %%
+
+
 [ training_data, labeled_training, test_data, labeled_test ] = partition_data(X, l);
 
 
@@ -50,11 +51,10 @@ figure(fignr)
 imshow(B,[])
 hold off
 %% Classify test data
-
 fignr = 1;
 face = 100;
 sub_space_dim = 75;
-w_test = project_test_eigspace(test_data, x_bar, eigenvectors, sub_space_dim);
+w_test = add_test_data(test_data, x_bar, eigenvectors, sub_space_dim);
 
 x_tilde = reconstruct_face( x_bar, w(1:100,:), eigenvectors, face );
 B = reshape(real(x_tilde),[56,46]);
@@ -70,17 +70,8 @@ hold off
 
 
 
-%% implement pca on each face class
-[ class_PCAs, x_bars] = PCA_per_class(training_data);
-
-
-
-
-
-
-
+%implement pca on each face class
 %%
-
 config
 
 
