@@ -18,15 +18,16 @@ function [ true_pos false_pos ] = nnclassifier( w_unknowns, unknown_labels, w, l
         unknown_label = unknown_labels(j);
         for i = 1:N
            w_n = w(1:L, i);
-           e_temp = e_temp + norm(w_unknown - w_n);
-           if counter == num_of_training
+           %e_temp = e_temp + norm(w_unknown - w_n);
+           e_temp = norm(w_unknown - w_n);
+           %if counter == num_of_training
                counter = 1;
                if e_temp < e
                    e = e_temp;
                    label = labels(i);
                end
                e_temp = 0;
-           end
+           %end
            counter = counter + 1;
         end
 
@@ -42,6 +43,7 @@ function [ true_pos false_pos ] = nnclassifier( w_unknowns, unknown_labels, w, l
     end
     labels_true
     labels_false
+    
 end
     
 

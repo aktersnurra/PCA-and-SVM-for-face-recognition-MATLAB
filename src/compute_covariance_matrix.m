@@ -1,15 +1,7 @@
-function [ A, S ] = compute_covariance_matrix( training_data, x_bar )
+function [ S ] = compute_covariance_matrix( A )
 %UNTITLED8 Summary of this function goes here
 %   Detailed explanation goes here
-    start = 1;
-    N = length(training_data(1, :));
-    A = [];
-    for i = start:N
-       x = training_data(:, i);
-       phi = x - x_bar;
-       A = [A phi];
-    end
-    
+    N = length(A(1,:));
     S = (1/N) * A * A';
 end
 

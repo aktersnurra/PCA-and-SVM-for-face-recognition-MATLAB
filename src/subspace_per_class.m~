@@ -1,7 +1,0 @@
-function [ output_args ] = subspace_per_class( train_data )
-%UNTITLED9 Summary of this function goes here
-%   Detailed explanation goes here
-    stop = train_
-
-end
-
