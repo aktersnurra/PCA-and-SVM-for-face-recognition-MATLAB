@@ -1,4 +1,4 @@
-function [ true_pos, correct, false_pos, false  ] = nn_class_PCA( class_PCAs, x_bars, test_data, test_labels )
+function [ true_pos, false_pos  ] = nn_class_PCA( class_PCAs, x_bars, test_data, test_labels )
 %UNTITLED10 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,11 +6,11 @@ function [ true_pos, correct, false_pos, false  ] = nn_class_PCA( class_PCAs, x_
     true_pos = 0;
     false_pos = 0;
     counter = 1;
-    correct = [];
-    false = [];
     rows = size(class_PCAs(:,1));
     eigenvectors = zeros(rows(1),7);
-    test = 1;
+   
+    %correct = [];
+    %false = [];
     
     for unknown_face = test_data
        e = Inf;
@@ -39,10 +39,10 @@ function [ true_pos, correct, false_pos, false  ] = nn_class_PCA( class_PCAs, x_
        
        if class_unknown == correct_label
            true_pos = true_pos + 1;
-           correct = [correct class_unknown];
+           %correct = [correct class_unknown];
        else
            false_pos = false_pos + 1;
-           false = [false class_unknown];
+           %false = [false class_unknown];
        end  
        
     end

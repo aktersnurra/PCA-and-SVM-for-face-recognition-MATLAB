@@ -25,7 +25,7 @@ display_eigenvalues( eigenvalues, fignr );
 fignr = fignr + 1;
 display_eigenvalues( eigenvalues_v, fignr );
 
-sub_space_dim = length(Sb(1,:));
+sub_space_dim = length(Sb(1:));
 
 w = faces_onto_eigenfaces( A, eigenvectors, sub_space_dim );
 
@@ -53,11 +53,11 @@ hold off
 %% Classify test data
 
 
-sub_space_dim = 190;
+sub_space_dim = 300;
 
 w_test = project_test_eigspace(test_data, x_bar, eigenvectors, sub_space_dim);
 
-[ true_pos_w, false_pos_w ] = nnclassifier(w_test, test_labels, w, training_labels);
+[ true_pos_w, false_pos_w ] = nnclassifier(w_test, test_labels, w, training_labels)
 
 acc_w = true_pos_w / (true_pos_w + false_pos_w)
 
@@ -75,9 +75,9 @@ acc_w = true_pos_w1 / (true_pos_w1 + false_pos_w1)
 
 %%
 
-[ true_pos_pca, false_pos_pca  ] = nn_class_PCA( class_PCAs, x_bars, test_data, test_labels );
+[ true_pos_pca, correct, false_pos_pca, false  ] = nn_class_PCA( class_PCAs, x_bars, test_data, test_labels )
 
-acc_w = true_pos_pca / (true_pos_pca + false_pos_pca)
+acc_w = true_pos_pca * (true_pos_pca * false_pos_pca)
 
 
 %%
