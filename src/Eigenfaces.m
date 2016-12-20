@@ -71,6 +71,7 @@ acc_w = true_pos_w1 / (true_pos_w1 + false_pos_w1)
 
 
 %% implement pca on each face class
+
 [ class_PCAs, x_bars] = PCA_per_class(training_data, x_bar);
 
 %%
@@ -81,11 +82,195 @@ acc_w = true_pos_pca / (true_pos_pca + false_pos_pca)
 
 
 %%
+%{
+Use the provided face data, and the same data partition into training and
+testing as in Q1. Feature vectors x are the raw-intensity vectors 
+(obtained by raster-scanning pixel values of face images) or PCA 
+coefficients. Try both and compare the results below.
 
+Train and test multi-class SVM using the feature vectors x. You can use any
+existing toolbox for two-class (or binary-class) SVMs. Note, write your own
+lines of code for the multi-class extensions of SVM (both one-versus-the-
+rest and one-versus-one), and provide your code in an appendix of your 
+report. Compare the results of the two multi-class extensions of SVM.
+%}
 config
+%%
+model_linear = svmtrain(training_labels(1:14)', sparse(training_data(:, 15:28))', kernel_linear);
+model_precomputed = svmtrain(training_labels(1:14)', [(1:14)', training_data(:, 1:14)'*training_data(:, 1:14)], kernel_RBF);
 
 
 
 
 
 
+%%
+train_class_arr = partition_classes( training_data, training_labels );
+
+%% Linear one-v-rest
+
+C = [1*10^(-11) 8.6*10^(-10) 2^(-28) 1 2^(20)];
+data = [];
+for c = C
+    kernel_linear = sprintf('-s 0 -t 0 -c %g -q', c);
+    
+    [ trained_SVMs, classes ] = SVM_train_one_v_rest( train_class_arr, training_labels, kernel_linear );
+    
+    [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, training_data, training_labels );
+    
+    data = [data; {sprintf('C = %g, train p = %g', c, TP/(TP + FP))}];
+    
+    [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, test_data, test_labels );
+    
+    data = [data; {sprintf('C = %g, test p = %g', c, TP/(TP + FP))}]
+end
+%% Linear one-v-one
+C = [2^(-5) 2^(-2) 2^(10)];
+data = [];
+for c = C
+    kernel_linear = sprintf('-s 0 -t 0 -c %g -q', c);
+    [ trained_SVMs, classes ] = SVM_train_one_v_one( train_class_arr, training_labels, kernel_linear );
+
+    [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, training_data, training_labels );
+    data = [data; {sprintf('C = %g, train p = %g', c, TP/(TP + FP))}];
+
+    [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, test_data, test_labels );
+    data = [data; {sprintf('C = %g, test p = %g', c, TP/(TP + FP))}]
+end
+
+
+%% PCA partition
+w_less_dim = w(1:190,:);
+train_weight_arr = partition_classes( w_less_dim, training_labels );
+
+%% PCA Linear one-v-rest
+C = [1*10^(-11) 2^(-28) 1 2^(15)];
+data = [];
+for c = C
+    kernel_linear = sprintf('-s 0 -t 0 -c %g -q', c);
+    [ trained_SVMs, classes ] = SVM_train_one_v_rest( train_weight_arr, training_labels, kernel_linear );
+    [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, w_less_dim, training_labels );
+    data = [data; {sprintf('C = %g, train p = %g', c, TP/(TP + FP))}];
+    
+    [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, w_test, test_labels );
+    data = [data; {sprintf('C = %g, test p = %g', c, TP/(TP + FP))}]
+end
+%% PCA Linear one-v-one
+C = [8.6*10^(-5) 1 2^(20)];
+data = [];
+for c = C
+    kernel_linear = sprintf('-s 0 -t 0 -c %g -q', c);
+    [ trained_SVMs, classes ] = SVM_train_one_v_one( train_weight_arr, training_labels, kernel_linear );
+    
+    [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, w_less_dim, training_labels );
+    data = [data; {sprintf('C = %g, train p = %g', c, TP/(TP + FP))}];
+
+    [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, w_test, test_labels );
+    data = [data; {sprintf('C = %g, test p = %g', c, TP/(TP + FP))}]
+
+end
+
+
+
+
+
+
+
+%% Non-linear
+sigma_arr = [50000 10000 30000];
+C_arr = [2^(-28) 2^(-7)  2^(15)];
+data = [];
+% Libsvm options
+% -s 0 : classification
+% -t 2 : RBF kernel
+% -g : gamma in the RBF kernel
+% sprintf('-s 0 -t 2 -g %g -c %g', gamma, C)
+for sigma = sigma_arr
+    gamma = (2*sigma^2)^(-1);
+    for C = C_arr
+        kernel_RBF = sprintf('-s 0 -t 2 -g %g -c %g -q', gamma, C)
+
+        [ trained_SVMs, classes ] = SVM_train_one_v_rest( train_class_arr, training_labels, kernel_RBF );
+        
+        [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, training_data, training_labels );
+        
+        data = [data; sprintf('train g %g C %g TP %g FP %g', gamma, C, TP, FP)];
+
+        [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, test_data, test_labels );
+        
+        data = [data; sprintf('test g %g C %g TP %g FP %g', gamma, C, TP, FP)];
+    end
+end
+%%
+
+sigma_arr = [50000 10000 30000];
+C_arr = [2^(-28) 2^(-7)  2^(15)];
+data = [];
+% Libsvm options
+% -s 0 : classification
+% -t 2 : RBF kernel
+% -g : gamma in the RBF kernel
+% sprintf('-s 0 -t 2 -g %g -c %g', gamma, C)
+for sigma = sigma_arr
+    gamma = (2*sigma^2)^(-1);
+    for C = C_arr
+        kernel_RBF = sprintf('-s 0 -t 2 -g %g -c %g -q', gamma, C)
+
+        [ trained_SVMs, classes ] = SVM_train_one_v_one( train_class_arr, training_labels, kernel_RBF );
+        
+        [TP, FP] = test_SVM_one_v_one( trained_SVMs, classes, training_data, training_labels );
+        
+        data = [data; sprintf('train g %g C %g TP %g FP %g', gamma, C, TP, FP)];
+
+        [TP, FP] = test_SVM_one_v_one( trained_SVMs, classes, test_data, test_labels );
+        
+        data = [data; sprintf('test g %g C %g TP %g FP %g', gamma, C, TP, FP)];
+    end
+end
+%% Non-linear PCA
+gamma_arr = [2^(-28) 2^(-16) 2^(-11)];
+C_arr = [2^(-5) 2^(5) 2^(15)];
+data = [];
+% Libsvm options
+% -s 0 : classification
+% -t 2 : RBF kernel
+% -g : gamma in the RBF kernel
+% sprintf('-s 0 -t 2 -g %g -c %g', gamma, C)
+for gamma = gamma_arr
+    for C = C_arr
+        kernel_RBF = sprintf('-s 0 -t 2 -g %g -c %g -q', gamma, C)
+
+        [ trained_SVMs, classes ] = SVM_train_one_v_rest( train_weight_arr, training_labels, kernel_RBF );
+        
+        [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, w_less_dim, training_labels );
+
+        data = [data; {sprintf('C = %g, train p = %g', C, TP/(TP + FP))}];
+
+        [TP, FP] = test_SVM_one_v_rest( trained_SVMs, classes, w_test, test_labels );
+        data = [data; {sprintf('C = %g, test p = %g', C, TP/(TP + FP))}]
+    end
+end
+%%
+
+sigma_arr = [50000 10000 30000];
+C_arr = [2^(-28) 2^(-7)  2^(15)];
+data = [];
+% Libsvm options
+% -s 0 : classification
+% -t 2 : RBF kernel
+% -g : gamma in the RBF kernel
+% sprintf('-s 0 -t 2 -g %g -c %g', gamma, C)
+for sigma = sigma_arr
+    gamma = (2*sigma^2)^(-1);
+    for C = C_arr
+        kernel_RBF = sprintf('-s 0 -t 2 -g %g -c %g -q', gamma, C)
+
+        [ trained_SVMs, classes ] = SVM_train_one_v_one( train_weight_arr, training_labels, kernel_RBF );
+
+        [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, w_less_dim, training_labels );
+        data = [data; {sprintf('C = %g, train p = %g', c, TP/(TP + FP))}];
+
+        [ votes, TP, FP ] = test_SVM_one_v_one( trained_SVMs, classes, w_test, test_labels );
+        data = [data; {sprintf('C = %g, test p = %g', c, TP/(TP + FP))}]
+    end
+end
